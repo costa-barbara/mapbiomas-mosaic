@@ -1,1 +1,1 @@
-# mapbiomas-mosaic
+# MapBiomas mosaics
