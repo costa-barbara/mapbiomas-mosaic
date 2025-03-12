@@ -3,7 +3,7 @@ import ee
 from modules.BandNames import getBandNames
 from pprint import pprint
 
-ee.Initialize()
+ee.Initialize(project= "ee-barbaracostaipam")
 
 
 def getMosaic(
