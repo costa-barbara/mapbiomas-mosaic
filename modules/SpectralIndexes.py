@@ -1,7 +1,6 @@
 #
 import ee
 
-
 def getNDVI(image):
 
     exp = '( b("nir") - b("red") ) / ( b("nir") + b("red") )'
@@ -13,62 +12,9 @@ def getNDVI(image):
     return image.addBands(srcImg=ndvi, overwrite=True)
 
 
-def getNDBI(image):
-
-    exp = '( b("swir1") - b("nir") ) / ( b("swir1") + b("nir") )'
-
-    ndbi = image.expression(exp)\
-        .rename(["ndbi"])\
-        .add(1)
-
-    return image.addBands(srcImg=ndbi, overwrite=True)
-
-
-def getUI(image):
-
-    exp = '( b("swir2") - b("nir") ) / ( b("swir2") + b("nir") )'
-
-    ui = image.expression(exp)\
-        .rename(["ui"])\
-        .add(1)
-
-    return image.addBands(srcImg=ui, overwrite=True)
-
-
-def getBU(image):
-    
-    exp = 'b("ndbi") - b("ndvi")'
-
-    bu = image.expression(exp)\
-        .rename(["bu"])
-
-    return image.addBands(srcImg=bu, overwrite=True)
-
-
-def getEBBI(image):
-    
-    # exp = '( b("swir1") - b("nir") ) / ( 0.1 * sqrt(b("swir1") + b("tir")) )'
-    exp = '( b("swir1_dn") - b("nir_dn") ) / ( 10 * sqrt(b("swir1_dn") + b("tir_dn")) )'
-
-    ebbi = image.expression(exp)\
-        .rename(["ebbi"])
-
-    return image.addBands(srcImg=ebbi, overwrite=True)
-
-def getNDWI(image):
-
-    exp = 'float(b("nir") - b("swir1"))/(b("nir") + b("swir1"))'
-
-    ndwi = image.expression(exp)\
-        .rename(["ndwi"])\
-        .add(1)
-
-    return image.addBands(srcImg=ndwi, overwrite=True)
-
-
 def getMNDWI(image):
 
-    exp = 'float(b("green") - b("swir1"))/(b("green") + b("swir1"))'
+    exp = '(b("green") - b("swir1"))/(b("green") + b("swir1"))'
 
     mndwi = image.expression(exp)\
         .rename(["mndwi"])\
@@ -77,20 +23,9 @@ def getMNDWI(image):
     return image.addBands(srcImg=mndwi, overwrite=True)
 
 
-def getSAVI(image):
-
-    exp = '1.5 * (b("nir") - b("red")) / (0.5 + b("nir") + b("red"))'
-
-    savi = image.expression(exp)\
-        .rename(["savi"])\
-        .add(1)
-
-    return image.addBands(srcImg=savi, overwrite=True)
-
-
 def getPRI(image):
 
-    exp = 'float(b("blue") - b("green"))/(b("blue") + b("green"))'
+    exp = '(b("blue") - b("green"))/(b("blue") + b("green"))'
 
     pri = image.expression(exp)\
         .rename(["pri"])\
@@ -101,24 +36,13 @@ def getPRI(image):
 
 def getCAI(image):
 
-    exp = 'float( b("swir2") / b("swir1") )'
+    exp = '( b("swir2") / b("swir1") )'
 
     cai = image.expression(exp)\
         .rename(["cai"])\
         .add(1)
 
     return image.addBands(srcImg=cai, overwrite=True)
-
-
-def getEVI(image):
-
-    exp = '2.5 * ((b("nir") - b("red")) / (b("nir") + 6 * b("red") - 7.5 * b("blue") + 1))'
-
-    evi = image.expression(exp)\
-        .rename(["evi"])\
-        .add(1)
-
-    return image.addBands(srcImg=evi, overwrite=True)
 
 
 def getEVI2(image):
@@ -130,6 +54,72 @@ def getEVI2(image):
         .add(1)
 
     return image.addBands(srcImg=evi2, overwrite=True)
+
+
+def getGCVI(image):
+
+    exp = 'b("nir") / b("green") - 1'
+
+    gcvi = image.expression(exp)\
+        .rename(["gcvi"])\
+        .add(1)
+
+    return image.addBands(gcvi)
+
+
+def getGRND(image):
+
+    exp = '( b("green") - b("red") ) / ( b("green") + b("red") )'
+
+    grnd = image.expression(exp)\
+        .rename(["grnd"])\
+        .add(1)
+
+    return image.addBands(grnd)
+
+
+def getMSI(image):
+
+    exp = '( b("nir") - b("swir1") ) / ( b("nir") + b("swir1") )'
+
+    msi = image.expression(exp)\
+        .rename(["msi"])\
+        .add(1)
+
+    return image.addBands(msi)
+
+
+def getGARI(image):
+
+    exp = '( b("nir") - (b("green") - (b("blue") - b("red"))) ) / ( b("nir") + (b("green") - (b("blue") - b("red"))) )'
+
+    gari = image.expression(exp)\
+        .rename(["gari"])\
+        .add(1)
+
+    return image.addBands(gari)
+
+
+def getGNDVI(image):
+
+    exp = '( b("nir") - b("green") ) / ( b("nir") + b("green") )'
+
+    gndvi = image.expression(exp)\
+        .rename(["gndvi"])\
+        .add(1)
+
+    return image.addBands(gndvi)
+
+
+def getMSAVI(image):
+
+    exp = '(2 * b("nir") + 1 - sqrt((2 * b("nir") + 1) ** 2 - 8 * (b("nir") - b("red")))) / 2'
+    
+    msavi = image.expression(exp)\
+        .rename(["msavi"])\
+        .add(1)
+
+    return image.addBands(msavi)
 
 
 def getHallCover(image):
@@ -152,14 +142,3 @@ def getHallHeigth(image):
         .rename(["hallheigth"])
 
     return image.addBands(hallheigth)
-
-
-def getGCVI(image):
-
-    exp = 'b("nir") / b("green") - 1'
-
-    gcvi = image.expression(exp)\
-        .rename(["gcvi"])\
-        .add(1)
-
-    return image.addBands(gcvi)
