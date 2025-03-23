@@ -51,8 +51,8 @@ def getMosaic(
     mosaic = mosaic\
         .addBands(mosaicDry)\
         .addBands(mosaicWet)\
-        .addBands(mosaicMin.rename(bands.map(lambda band: ee.String(band).cat('_min')))))\
-        .addBands(mosaicMax.rename(bands.map(lambda band: ee.String(band).cat('_max')))))\
+        .addBands(mosaicMin.rename(bands.map(lambda band: ee.String(band).cat('_min'))))\
+        .addBands(mosaicMax.rename(bands.map(lambda band: ee.String(band).cat('_max'))))\
         .addBands(mosaicAmp)\
         .addBands(mosaicStdDev)\
         .addBands(dry)\
