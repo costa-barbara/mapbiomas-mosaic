@@ -142,3 +142,15 @@ def getHallHeigth(image):
         .rename(["hallheigth"])
 
     return image.addBands(hallheigth)
+
+
+def getTGSI(image):
+
+    exp = '( b("red") - b("blue") ) / ( b("red") + b("blue") + b("green") )'
+
+    tgsi = image.expression(exp)\
+        .exp()\
+        .rename(["tgsi"])
+        .add(1)
+
+    return image.addBands(tgsi)
