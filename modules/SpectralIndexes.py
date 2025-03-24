@@ -150,7 +150,7 @@ def getTGSI(image):
 
     tgsi = image.expression(exp)\
         .exp()\
-        .rename(["tgsi"])
+        .rename(["tgsi"])\
         .add(1)
 
     return image.addBands(tgsi)
