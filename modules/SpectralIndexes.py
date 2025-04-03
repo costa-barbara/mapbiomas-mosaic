@@ -122,6 +122,17 @@ def getMSAVI(image):
     return image.addBands(msavi)
 
 
+def getNBR(image):
+
+    exp = '( b("nir") - b("swir2") ) / ( b("nir") + b("swir2") )'
+    
+    nbr = image.expression(exp)\
+        .rename(["nbr"])\
+        .add(1)
+
+    return image.addBands(nbr)
+
+
 def getHallCover(image):
 
     exp = '( (-b("red") * 0.017) - (b("nir") * 0.007) - (b("swir2") * 0.079) + 5.22 )'
