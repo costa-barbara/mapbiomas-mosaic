@@ -12,7 +12,7 @@ def getMosaic(
         percentileDry=25,
         percentileWet=75,
         percentileMin=5,  # New parameter for minimum mosaic
-        percentileMax=65,  # New parameter for maximum mosaic
+        percentileMax=95,  # New parameter for maximum mosaic
         percentileBand='ndvi',
         dateStart='2020-01-01',
         dateEnd='2021-01-01'):
