@@ -31,8 +31,8 @@ def addThreeYearMetrics(year, mosaic, mosaic_dict, aoi_mask):
         ]
 
         # Compute NDVI amplitude: max(ndvi_median_wet) - min(ndvi_median_dry)
-        min_ndvi_dry = ee.ImageCollection.fromImages([m.select('ndvi_median_dry') for m in mosaics_3yr]).min()
-        max_ndvi_wet = ee.ImageCollection.fromImages([m.select('ndvi_median_wet') for m in mosaics_3yr]).max()
+        min_ndvi_dry = ee.ImageCollection.fromImages([m.select('ndvi_median_dry').toFloat() for m in mosaics_3yr]).min()
+        max_ndvi_wet = ee.ImageCollection.fromImages([m.select('ndvi_median_wet').toFloat() for m in mosaics_3yr]).max()
         amp_ndvi_3yr = max_ndvi_wet.subtract(min_ndvi_dry)\
             .rename('amp_ndvi_3yr')\
             .updateMask(aoi_mask.eq(1))
