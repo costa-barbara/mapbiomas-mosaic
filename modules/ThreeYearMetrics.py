@@ -17,7 +17,7 @@ def addThreeYearMetrics(year, mosaic, mosaic_dict, aoi_mask):
                   - var_nbr_median_3yr: Variance of NBR median over 3 years.
     """
 
-    if year < min(mosaic_dict.keys()) + 2:
+    if year not in mosaic_dict or (year - 1) not in mosaic_dict or (year - 2) not in mosaic_dict:
         # If there are not enough previous years to compute 3-year metrics
         amp_ndvi_3yr = ee.Image(0).rename('amp_ndvi_3yr').updateMask(aoi_mask.eq(1))
         var_ndvi_p25_3yr = ee.Image(0).rename('var_ndvi_p25_3yr').updateMask(aoi_mask.eq(1))
