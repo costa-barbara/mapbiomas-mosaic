@@ -1,6 +1,5 @@
 #
 import ee
-from modules.BandNames import getBandNames
 from pprint import pprint
 
 # Initialize Earth Engine with specific project (adjust to your environment)
