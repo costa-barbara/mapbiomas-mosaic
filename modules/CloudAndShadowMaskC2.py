@@ -2,9 +2,6 @@
 
 import ee, math
 
-ee.Initialize()
-
-
 def rescale(image, min=0, max=10000):
 
     image = ee.Image(image)
@@ -13,7 +10,6 @@ def rescale(image, min=0, max=10000):
         .divide(ee.Number(max).subtract(min))
 
     return image
-
 
 def cloudScoreMask(image, cloudThresh):
 
@@ -45,7 +41,6 @@ def cloudScoreMask(image, cloudThresh):
     score = score.gte(cloudThresh).rename('cloudScoreMask')
 
     return image.addBands(score)
-
 
 def tdom(collection,
          zScoreThresh=-1,
@@ -82,7 +77,6 @@ def tdom(collection,
     collection = collection.map(_maskDarkOutliers)
 
     return collection
-
 
 def cloudProject(image,
                  cloudBand=None,
@@ -137,116 +131,12 @@ def cloudProject(image,
 
     return image.addBands(shadowMask)
 
-
-def cloudFlagMaskToaLX(image):
-
-    qaBand = ee.Image(image.select(['pixel_qa']))
-
-    cloudMask = qaBand.bitwiseAnd(int(math.pow(2, 3))) \
-        .rename('cloudFlagMask')
-
-    return ee.Image(cloudMask)
-
-
-def cloudFlagMaskToaS2(image):
-
-    qaBand = ee.Image(image.select(['pixel_qa']))
-
-    cloudMask = qaBand.bitwiseAnd(int(math.pow(2, 10))).neq(0) \
-        .Or(qaBand.bitwiseAnd(int(math.pow(2, 11))).neq(0)) \
-        .rename('cloudFlagMask')
-
-    return ee.Image(cloudMask)
-
-
-def cloudFlagMaskToa(image):
-
-    isSentinel = ee.String(image.get('satellite_name')) \
-        .slice(0, 10).compareTo('Sentinel-2').Not()
-
-    cloudMask = ee.Algorithms.If(
-        isSentinel,
-        cloudFlagMaskToaS2(image),
-        cloudFlagMaskToaLX(image))
-
-    return ee.Image(cloudMask)
-
-
-def cloudFlagMaskSr(image):
-
-    qaBand = ee.Image(image.select(['pixel_qa']))
-
-    cloudMask = qaBand.bitwiseAnd(int(math.pow(2, 3))) \
-        .neq(0) \
-        .rename('cloudFlagMask')
-
-    return ee.Image(cloudMask)
-
-
-def cloudFlagMask(image):
-
-    image = ee.Image(image)
-
-    isToa = ee.String(image.get('reflectance')).compareTo('TOA').Not()
-
-    cloudMask = ee.Algorithms.If(
-        isToa,
-        cloudFlagMaskToa(image),
-        cloudFlagMaskSr(image))
-
-    return image.addBands(ee.Image(cloudMask))
-
-
-def cloudShadowFlagMaskToaLX(image):
-
-    qaBand = ee.Image(image.select(['pixel_qa']))
-
-    cloudShadowMask = qaBand.bitwiseAnd(int(math.pow(2, 4))).neq(0)\
-        .rename('cloudShadowFlagMask')
-
-    return ee.Image(cloudShadowMask)
-
-
-def cloudShadowFlagMaskSrLX(image):
-
-    qaBand = ee.Image(image.select(['pixel_qa']))
-
-    cloudShadowMask = qaBand.bitwiseAnd(int(math.pow(2, 4))) \
-        .neq(0) \
-        .rename('cloudShadowFlagMask')
-
-    return ee.Image(cloudShadowMask)
-
-
-def cloudShadowFlagMask(image):
-
-    isSentinel = ee.String(image.get('satellite_name')) \
-        .slice(0, 10).compareTo('Sentinel-2').Not()
-
-    isToa = ee.String(image.get('reflectance')).compareTo('TOA').Not()
-
-    cloudShadowMask = ee.Algorithms.If(
-        isSentinel,
-        ee.Image(0).mask(image.select(0)).rename('cloudShadowFlagMask'),
-        ee.Algorithms.If(
-            isToa,
-            cloudShadowFlagMaskToaLX(image),
-            cloudShadowFlagMaskSrLX(image)))
-
-    return image.addBands(ee.Image(cloudShadowMask))
-
-
 def getMasks(collection,
              cloudThresh=10,
              zScoreThresh=-1,
              shadowSumThresh=5000,
              dilatePixels=2,
-             cloudFlag=True,
-             cloudScore=True,
-             cloudShadowFlag=True,
-             cloudShadowTdom=True,
-             cloudHeights=[],
-             cloudBand=None):
+             cloudHeights=[]):
     """"Get cloud and shadow masks.
 
     Parameters:
@@ -265,19 +155,6 @@ def getMasks(collection,
     Returns:
         ee.ImageCollection: collection with cloud/shadow masks
     """
-
-    collection = ee.Algorithms.If(
-        cloudFlag,
-        ee.Algorithms.If(
-            cloudScore,
-            collection.map(cloudFlagMask).map(
-                lambda collection: cloudScoreMask(collection, cloudThresh)
-            ),
-            collection.map(cloudFlagMask)),
-        collection.map(
-            lambda collection: cloudScoreMask(collection, cloudThresh)
-        )
-    )
 
     collection = ee.ImageCollection(collection)
 
