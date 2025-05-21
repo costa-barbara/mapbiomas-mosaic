@@ -61,9 +61,6 @@ def getMosaic(
     mosaicMin = collection.reduce(ee.Reducer.percentile([percentileMin]))
     mosaicMax = collection.reduce(ee.Reducer.percentile([percentileMax]))
 
-    # Compute amplitude (max - min)
-    mosaicAmp = mosaicMax.subtract(mosaicMin).rename(bandsAmp)
-
     # Compute Median Absolute Deviation (MAD) across time series
     mosaicMedian = collection.reduce(ee.Reducer.median())
     mosaicStdDev = collection.map(lambda img: img.subtract(mosaicMedian).abs())\
@@ -74,16 +71,16 @@ def getMosaic(
     mosaicCVR = mosaicStdDev.divide(mosaicMedian).rename(bands.map(lambda b: ee.String(b).cat('_cvr')))
 
     # Rename min and max bands
-    mosaicMinRenamed = mosaicMin.rename(bands.map(lambda band: ee.String(band).cat('_min')))
-    mosaicMaxRenamed = mosaicMax.rename(bands.map(lambda band: ee.String(band).cat('_max')))   
+    mosaicMin = mosaicMin.rename(bands.map(lambda band: ee.String(band).cat('_min')))
+    mosaicMax = mosaicMax.rename(bands.map(lambda band: ee.String(band).cat('_max')))   
 
     # Combine all components into final mosaic
     mosaic = mosaic\
         .addBands(mosaicDry)\
         .addBands(mosaicWet)\
-        .addBands(mosaicMinRenamed)\
-        .addBands(mosaicMaxRenamed)\
-        .addBands(mosaicAmp)\
+        .addBands(mosaicMin)\
+        .addBands(mosaicMax)\
+        .addBands(mosaicStdDev)\
         .addBands(mosaicCVR)\
         .addBands(dry)\
         .addBands(wet)
