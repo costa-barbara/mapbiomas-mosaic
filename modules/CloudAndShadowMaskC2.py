@@ -95,18 +95,6 @@ def cloudProject(image,
 
     nominalScale = cloud.projection().nominalScale()
 
-    meanAzimuth = image.get('sun_azimuth_angle')
-    meanElevation = image.get('sun_elevation_angle')
-
-    azR = ee.Number(meanAzimuth) \
-        .multiply(math.pi) \
-        .divide(180.0) \
-        .add(ee.Number(0.5).multiply(math.pi))
-
-    zenR = ee.Number(0.5) \
-        .multiply(math.pi) \
-        .subtract(ee.Number(meanElevation).multiply(math.pi).divide(180.0))
-
     def _findShadow(cloudHeight):
         cloudHeight = ee.Number(cloudHeight)
 
