@@ -218,9 +218,10 @@ def getTGSI(image):
 # Specific indexes for Sentinel-2 data
   
 def getNDVIRED (image):
-     """
-     Normalized difference vegetation index with red edge band (NDVI Red)
-     """
+    """
+    Normalized difference vegetation index with red edge band (NDVI Red)
+    """
+    
     exp = '( b("red_edge_1") - b("red") ) / ( b("red_edge_1") + b("red") )'
 
     ndviRed = image.expression(exp)\
@@ -232,9 +233,10 @@ def getNDVIRED (image):
 
 
 def getVI700 (image):
-     """
-     Normalized Difference Chlorophyll Index (NDCI)
-     """
+    """
+    Normalized Difference Chlorophyll Index (NDCI)
+    """
+    
     exp = '( b("red_edge_1") - b("red_edge_2") ) / ( b("red_edge_1") + b("red_edge_2") )'
 
     ndci = image.expression(exp)\
@@ -246,9 +248,10 @@ def getVI700 (image):
 
 
 def getIRECI (image):
-     """
-     Inverted red-edge chlorophyll index (IRECI)
-     """
+    """
+    Inverted red-edge chlorophyll index (IRECI)
+    """
+    
     exp = '( b("red_edge_3") - b("red") ) / ( b("red_edge_1") + b("red_edge_2") )'
 
     ireci = image.expression(exp)\
@@ -260,9 +263,10 @@ def getIRECI (image):
 
 
 def getCIRE (image):
-     """
-     Chlorophyll index red edge (CIRE)
-     """
+    """
+    Chlorophyll index red edge (CIRE)
+    """
+    
     exp = '( b("nir") - b("red_edge_1") )'
 
     cire = image.expression(exp)\
@@ -274,9 +278,9 @@ def getCIRE (image):
 
 
 def getTCARI (image):
-     """
-     Transformed chlorophyll absorption in reflectance index (TCARI)
-     """
+    """
+    Transformed chlorophyll absorption in reflectance index (TCARI)
+    """
     exp = '( (b("red_edge_1") - b("red") ) - 0.2 * ( b("red_edge_1") - b("green") ) ) * ( b("red_edge_1") / b("red") ) * 3'
 
     tcari = image.expression(exp)\
@@ -288,9 +292,9 @@ def getTCARI (image):
 
 
 def getSFDVI (image):
-     """
-     Spectral feature depth vegetation index (SFDVI)
-     """
+    """
+    Spectral feature depth vegetation index (SFDVI)
+    """
     exp = '( (( b("green") + b("nir") ) / 2 ) - ( b("red") + b("red_edge_1") ) / 2 )'
 
     sfdvi = image.expression(exp)\
@@ -302,9 +306,9 @@ def getSFDVI (image):
 
 
 def getNDRE (image):
-     """
-     Normalized difference red edge index
-     """
+    """
+    Normalized difference red edge index
+    """
     exp = '( b("nir") - b("red_edge_1")) / ( b("nir") + b("red_edge_1")) '
 
     ndre = image.expression(exp)\
