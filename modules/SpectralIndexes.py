@@ -316,5 +316,5 @@ def getNDRE (image):
         .rename(["ndre"])\
         .add(1)
 
-      return image.addBands(ndre, overwrite=True)
+    return image.addBands(ndre, overwrite=True)
   
