@@ -281,7 +281,7 @@ def getTCARI (image):
     """
     Transformed chlorophyll absorption in reflectance index (TCARI)
     """
-    exp = '( (b("red_edge_1") - b("red") ) - 0.2 * ( b("red_edge_1") - b("green") ) ) * ( b("red_edge_1") / b("red") ) * 3'
+    exp = '( ((b("red_edge_1") - b("red") ) - 0.2) * ( b("red_edge_1") - b("green") ) ) * (( b("red_edge_1") / b("red") ) * 3)'
 
     tcari = image.expression(exp)\
         .exp()\
