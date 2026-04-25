@@ -19,47 +19,6 @@ def getNDVI(image):
     return image.addBands(ndvi, overwrite=True)
 
 
-def getMNDWI(image):
-    """
-    Modified Normalized Difference Water Index (MNDWI)
-    """
-
-    exp = '(b("green") - b("swir1"))/(b("green") + b("swir1"))'
-
-    mndwi = image.expression(exp)\
-        .rename(["mndwi"])\
-        .add(1)
-
-    return image.addBands(mndwi, overwrite=True)
-
-
-def getPRI(image):
-    """
-    Photochemical Reflectance Index (PRI)
-    """
-    
-    exp = '(b("blue") - b("green"))/(b("blue") + b("green"))'
-
-    pri = image.expression(exp)\
-        .rename(["pri"])\
-        .add(1)
-
-    return image.addBands(pri, overwrite=True)
-
-
-def getCAI(image):
-    """
-    Cellulose Absorption Index (CAI)
-    """
-    exp = '( b("swir2") / b("swir1") )'
-
-    cai = image.expression(exp)\
-        .rename(["cai"])\
-        .add(1)
-
-    return image.addBands(cai, overwrite=True)
-
-
 def getEVI2(image):
     """
     Enhanced Vegetation Index 2 (EVI2)
@@ -71,77 +30,8 @@ def getEVI2(image):
         .rename(["evi2"])\
         .add(1)
 
+
     return image.addBands(evi2, overwrite=True)
-
-
-def getGCVI(image):
-    """
-    Green Chlorophyll Vegetation Index (GCVI)
-    """
-
-    exp = 'b("nir") / b("green") - 1'
-
-    gcvi = image.expression(exp)\
-        .rename(["gcvi"])\
-        .add(1)
-
-    return image.addBands(gcvi, overwrite=True)
-
-
-def getGRND(image):
-    """
-    Green-Red Vegetation Index (GRND)
-    """
-
-    exp = '( b("green") - b("red") ) / ( b("green") + b("red") )'
-
-    grnd = image.expression(exp)\
-        .rename(["grnd"])\
-        .add(1)
-
-    return image.addBands(grnd, overwrite=True)
-
-
-def getMSI(image):
-    """
-    Moisture Stress Index (MSI)
-    """
-
-    exp = '( b("nir") - b("swir1") ) / ( b("nir") + b("swir1") )'
-
-    msi = image.expression(exp)\
-        .rename(["msi"])\
-        .add(1)
-
-    return image.addBands(msi, overwrite=True)
-
-
-def getGARI(image):
-    """
-    Green Atmospherically Resistant Index (GARI)
-    """
-
-    exp = '( b("nir") - (b("green") - (b("blue") - b("red"))) ) / ( b("nir") + (b("green") - (b("blue") - b("red"))) )'
-
-    gari = image.expression(exp)\
-        .rename(["gari"])\
-        .add(1)
-
-    return image.addBands(gari, overwrite=True)
-
-
-def getGNDVI(image):
-    """
-    Green Normalized Difference Vegetation Index (GNDVI)
-    """
-
-    exp = '( b("nir") - b("green") ) / ( b("nir") + b("green") )'
-
-    gndvi = image.expression(exp)\
-        .rename(["gndvi"])\
-        .add(1)
-
-    return image.addBands(gndvi, overwrite=True)
 
 
 def getMSAVI(image):
@@ -158,46 +48,63 @@ def getMSAVI(image):
     return image.addBands(msavi, overwrite=True)
 
 
+def getGCVI(image):
+    """
+    Green Chlorophyll Vegetation Index (GCVI)
+    """
+
+    exp = 'b("nir") / b("green") - 1'
+
+    gcvi = image.expression(exp)\
+        .rename(["gcvi"])\
+        .add(1)
+
+    return image.addBands(gcvi, overwrite=True)
+
+
+def getMNDWI(image):
+    """
+    Modified Normalized Difference Water Index (MNDWI)
+    """
+
+    exp = '(b("green") - b("swir1"))/(b("green") + b("swir1"))'
+
+    mndwi = image.expression(exp)\
+        .rename(["mndwi"])\
+        .add(1)
+
+    return image.addBands(mndwi, overwrite=True)
+
+
 def getNBR(image):
     """
     Normalized Burn Ratio (NBR)
     """
 
-    exp = '( b("nir") - b("swir2") ) / ( b("nir") + b("swir2") )'
-    
-    nbr = image.expression(exp)\
-        .rename(["nbr"])\
+    exp = '(b("nir") - b("swir2")) / (b("nir") + b("swir2"))'
+
+    nbr = image.expression(exp) \
+        .rename(["nbr"]) \
         .add(1)
 
     return image.addBands(nbr, overwrite=True)
 
 
-def getHallCover(image):
+def getNDTI(image):
     """
-    Hall et al. (2011) Canopy Cover Model
-    """
+    Normalized Difference Tillage Index (NDTI)
 
-    exp = '( (-b("red") * 0.017) - (b("nir") * 0.007) - (b("swir2") * 0.079) + 5.22 )'
-
-    hallcover = image.expression(exp)\
-        .exp()\
-        .rename(["hallcover"])
-
-    return image.addBands(hallcover, overwrite=True)
-
-
-def getHallHeigth(image):
-    """
-    Hall et al. (2011) Canopy Height Model
+    Uses SWIR1 and SWIR2. Useful for exposed soil, crop residue,
+    tillage condition, and agricultural surface differences.
     """
 
-    exp = '( (-b("red") * 0.039) - (b("nir") * 0.011) - (b("swir1") * 0.026) + 4.13 )'
+    exp = '(b("swir1") - b("swir2")) / (b("swir1") + b("swir2"))'
 
-    hallheigth = image.expression(exp)\
-        .exp()\
-        .rename(["hallheigth"])
+    ndti = image.expression(exp) \
+        .rename(["ndti"]) \
+        .add(1)
 
-    return image.addBands(hallheigth, overwrite=True)
+    return image.addBands(ndti, overwrite=True)
 
 
 def getTGSI(image):
@@ -215,8 +122,138 @@ def getTGSI(image):
     return image.addBands(tgsi, overwrite=True)
 
 
-# Specific indexes for Sentinel-2 data
-  
+def getMSI(image):
+    """
+    Moisture Stress Index (MSI)
+
+    Classical MSI formulation: SWIR1 / NIR.
+    Higher values generally indicate higher vegetation water stress.
+    """
+
+    exp = 'b("swir1") / b("nir")'
+
+    msi = image.expression(exp) \
+        .rename(["msi"])
+
+    return image.addBands(msi, overwrite=True)
+
+
+def getTCW(image):
+    """
+    Tasseled Cap Wetness (TCW) for Landsat 8/9 OLI-like band names.
+
+    Coefficients from Baig et al. (2014) for Landsat 8 OLI.
+    """
+
+    exp = (
+        '0.1511 * b("blue") + '
+        '0.1973 * b("green") + '
+        '0.3283 * b("red") + '
+        '0.3407 * b("nir") - '
+        '0.7117 * b("swir1") - '
+        '0.4559 * b("swir2")'
+    )
+
+    tcw = image.expression(exp) \
+        .rename(["tcw"])
+
+    return image.addBands(tcw, overwrite=True)
+
+
+def getTCB(image):
+    """
+    Tasseled Cap Brightness (TCB) for Landsat 8/9 OLI-like band names.
+
+    Auxiliary component required to compute Tasseled Cap Angle.
+    """
+
+    exp = (
+        '0.3029 * b("blue") + '
+        '0.2786 * b("green") + '
+        '0.4733 * b("red") + '
+        '0.5599 * b("nir") + '
+        '0.5080 * b("swir1") + '
+        '0.1872 * b("swir2")'
+    )
+
+    tcb = image.expression(exp) \
+        .rename(["tcb"])
+
+    return image.addBands(tcb, overwrite=True)
+
+
+def getTCG(image):
+    """
+    Tasseled Cap Greenness (TCG) for Landsat 8/9 OLI-like band names.
+
+    Auxiliary component required to compute Tasseled Cap Angle.
+    """
+
+    exp = (
+        '-0.2941 * b("blue") - '
+        '0.2430 * b("green") - '
+        '0.5424 * b("red") + '
+        '0.7276 * b("nir") + '
+        '0.0713 * b("swir1") - '
+        '0.1608 * b("swir2")'
+    )
+
+    tcg = image.expression(exp) \
+        .rename(["tcg"])
+
+    return image.addBands(tcg, overwrite=True)
+
+
+def getTCA(image):
+    """
+    Tasseled Cap Angle (TCA)
+
+    Computed as atan(TCG / TCB). It represents the angular relation
+    between greenness and brightness.
+    """
+
+    image = getTCB(image)
+    image = getTCG(image)
+
+    tca = image.expression(
+        'atan(b("tcg") / b("tcb"))'
+    ).rename(["tca"])
+
+    return image.addBands(tca, overwrite=True)
+
+
+def getHallCover(image):
+    """
+    Hall et al. (2011) Canopy Cover Model
+    """
+
+    exp = '((-b("red") * 0.017) - (b("nir") * 0.007) - (b("swir2") * 0.079) + 5.22)'
+
+    hallcover = image.expression(exp) \
+        .exp() \
+        .rename(["hallcover"])
+
+    return image.addBands(hallcover, overwrite=True)
+
+
+def getHallHeigth(image):
+    """
+    Hall et al. (2011) Canopy Height Model
+    """
+
+    exp = '((-b("red") * 0.039) - (b("nir") * 0.011) - (b("swir1") * 0.026) + 4.13)'
+
+    hallheigth = image.expression(exp) \
+        .exp() \
+        .rename(["hallheigth"])
+
+    return image.addBands(hallheigth, overwrite=True)
+
+
+# --------------------------------------
+# SPECIFIC INDEXES FOR SENTINEL-2 DATA
+# --------------------------------------
+
 def getNDVIRED (image):
     """
     Normalized difference vegetation index with red edge band (NDVI Red)
