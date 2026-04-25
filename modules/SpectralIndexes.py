@@ -224,10 +224,18 @@ def getTCA(image):
 
 def getHallCover(image):
     """
-    Hall et al. (2011) Canopy Cover Model
+    Hall et al. (2011) Canopy Cover Model.
+
+    The Landsat reflectance bands are assumed to be scaled by 10000.
+    Therefore, red, nir, and swir2 are divided by 10000 before applying
+    the empirical model.
     """
 
-    exp = '((-b("red") * 0.017) - (b("nir") * 0.007) - (b("swir2") * 0.079) + 5.22)'
+    exp = (
+        '((-(b("red") / 10000) * 0.017) - '
+        '((b("nir") / 10000) * 0.007) - '
+        '((b("swir2") / 10000) * 0.079) + 5.22)'
+    )
 
     hallcover = image.expression(exp) \
         .exp() \
@@ -236,18 +244,26 @@ def getHallCover(image):
     return image.addBands(hallcover, overwrite=True)
 
 
-def getHallHeigth(image):
+def getHallHeight(image):
     """
-    Hall et al. (2011) Canopy Height Model
+    Hall et al. (2011) Canopy Height Model.
+
+    The Landsat reflectance bands are assumed to be scaled by 10000.
+    Therefore, red, nir, and swir1 are divided by 10000 before applying
+    the empirical model.
     """
 
-    exp = '((-b("red") * 0.039) - (b("nir") * 0.011) - (b("swir1") * 0.026) + 4.13)'
+    exp = (
+        '((-(b("red") / 10000) * 0.039) - '
+        '((b("nir") / 10000) * 0.011) - '
+        '((b("swir1") / 10000) * 0.026) + 4.13)'
+    )
 
-    hallheigth = image.expression(exp) \
+    hallheight = image.expression(exp) \
         .exp() \
-        .rename(["hallheigth"])
+        .rename(["hallheight"])
 
-    return image.addBands(hallheigth, overwrite=True)
+    return image.addBands(hallheight, overwrite=True)
 
 
 # --------------------------------------
