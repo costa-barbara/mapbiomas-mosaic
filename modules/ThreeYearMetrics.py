@@ -1,55 +1,91 @@
 import ee
 
+
 def addThreeYearMetrics(year, mosaic, mosaic_dict):
     """
-    Adds three-year metrics related to NDVI and NBR to the given mosaic.
+    Adds trailing three-year temporal metrics to the current annual mosaic.
+
+    The function uses the current year and up to two previous years.
+    For the first years of the time series, it uses only the available years
+    instead of assigning zero-valued bands.
+
+    Metrics are designed to capture:
+        - multi-year phenological amplitude
+        - interannual variability in vegetation vigor
+        - interannual variability in moisture/disturbance-related indices
+        - persistence of dry-season vegetation response
 
     Parameters:
-        year (int): The target year to compute metrics for.
-        mosaic (ee.Image): The current year's mosaic.
-        mosaic_dict (dict): Dictionary of mosaics for all years {year: ee.Image}.
+        year (int):
+            Target year.
+
+        mosaic (ee.Image):
+            Current year's annual mosaic.
+
+        mosaic_dict (dict):
+            Dictionary containing annual mosaics already generated for the
+            same region, in the format {year: ee.Image}.
 
     Returns:
-        ee.Image: Mosaic with added bands:
-                  - amp_ndvi_3yr: NDVI amplitude over 3 years (wet - dry).
-                  - var_ndvi_p25_3yr: Variance of NDVI P25 over 3 years.
-                  - var_nbr_median_3yr: Variance of NBR median over 3 years.
+        ee.Image:
+            Input mosaic with additional three-year temporal metrics.
     """
 
-    if year not in mosaic_dict or (year - 1) not in mosaic_dict or (year - 2) not in mosaic_dict:
-        # If there are not enough previous years to compute 3-year metrics
-        amp_ndvi_3yr = ee.Image(0).rename('amp_ndvi_3yr')
-        var_ndvi_p25_3yr = ee.Image(0).rename('var_ndvi_p25_3yr')
-        var_nbr_median_3yr = ee.Image(0).rename('var_nbr_median_3yr')
-    else:
-        # Get the mosaics from the current and two previous years
-        mosaics_3yr = [
-            mosaic_dict[year],
-            mosaic_dict[year - 1],
-            mosaic_dict[year - 2]
-        ]
+    # Use current year and up to two previous years.
+    years_3yr = [y for y in [year - 2, year - 1, year] if y in mosaic_dict]
 
-        # Compute NDVI amplitude: max(ndvi_median_wet) - min(ndvi_median_dry)
-        min_ndvi_dry = ee.ImageCollection.fromImages([m.select('ndvi_median_dry').toFloat() for m in mosaics_3yr]).min()
-        max_ndvi_wet = ee.ImageCollection.fromImages([m.select('ndvi_median_wet').toFloat() for m in mosaics_3yr]).max()
-        amp_ndvi_3yr = max_ndvi_wet.subtract(min_ndvi_dry)\
-            .rename('amp_ndvi_3yr')
+    mosaics_3yr = [mosaic_dict[y] for y in years_3yr]
 
-        # Compute variance of NDVI P25 over 3 years
-        ndvi_p25_stack = ee.ImageCollection.fromImages([m.select('ndvi_p25') for m in mosaics_3yr])
-        mean_p25 = ndvi_p25_stack.reduce(ee.Reducer.mean())
-        var_ndvi_p25_3yr = ndvi_p25_stack.map(lambda img: img.subtract(mean_p25).pow(2))\
-            .reduce(ee.Reducer.mean())\
-            .rename('var_ndvi_p25_3yr')
+    # Build ImageCollections for selected bands.
+    ndvi_wet = ee.ImageCollection.fromImages([m.select('ndvi_median_wet').toFloat() for m in mosaics_3yr])
 
-        # Compute variance of NBR median over 3 years
-        nbr_stack = ee.ImageCollection.fromImages([m.select('nbr_median') for m in mosaics_3yr])
-        mean_nbr = nbr_stack.reduce(ee.Reducer.mean())
-        var_nbr_median_3yr = nbr_stack.map(lambda img: img.subtract(mean_nbr).pow(2))\
-            .reduce(ee.Reducer.mean())\
-            .rename('var_nbr_median_3yr')
+    ndvi_dry = ee.ImageCollection.fromImages([m.select('ndvi_median_dry').toFloat() for m in mosaics_3yr])
 
-    # Add all metrics to the original mosaic
-    return mosaic.addBands(amp_ndvi_3yr)\
-                 .addBands(var_ndvi_p25_3yr)\
-                 .addBands(var_nbr_median_3yr)
+    evi2_wet = ee.ImageCollection.fromImages([m.select('evi2_median_wet').toFloat() for m in mosaics_3yr])
+
+    evi2_dry = ee.ImageCollection.fromImages([m.select('evi2_median_dry').toFloat() for m in mosaics_3yr])
+
+    gcvi_median = ee.ImageCollection.fromImages([m.select('gcvi_median').toFloat() for m in mosaics_3yr])
+
+    nbr_median = ee.ImageCollection.fromImages([m.select('nbr_median').toFloat() for m in mosaics_3yr])
+
+    ndfi_median = ee.ImageCollection.fromImages([m.select('ndfi_median').toFloat() for m in mosaics_3yr])
+
+    ndti_median = ee.ImageCollection.fromImages([m.select('ndti_median').toFloat() for m in mosaics_3yr])
+
+    # Multi-year phenological amplitude.
+    # Useful for agriculture and managed pasture, which often show stronger
+    # seasonal contrast than native vegetation.
+    amp_ndvi_3yr = ndvi_wet.max() \
+        .subtract(ndvi_dry.min()) \
+        .rename('amp_ndvi_3yr')
+
+    amp_evi2_3yr = evi2_wet.max() \
+        .subtract(evi2_dry.min()) \
+        .rename('amp_evi2_3yr')
+
+    # Interannual variability of vegetation vigor.
+    # Useful for detecting unstable or managed vegetation dynamics.
+    std_gcvi_median_3yr = gcvi_median.reduce(ee.Reducer.stdDev()) \
+        .rename('std_gcvi_median_3yr')
+
+    # Interannual variability of disturbance/moisture-related response.
+    std_nbr_median_3yr = nbr_median.reduce(ee.Reducer.stdDev()) \
+        .rename('std_nbr_median_3yr')
+
+    # Interannual variability of vegetation structure/integrity.
+    std_ndfi_median_3yr = ndfi_median.reduce(ee.Reducer.stdDev()) \
+        .rename('std_ndfi_median_3yr')
+
+    # Mean NDTI across three years.
+    # Useful for persistent agricultural soil/residue/tillage signal.
+    mean_ndti_median_3yr = ndti_median.reduce(ee.Reducer.mean()) \
+        .rename('mean_ndti_median_3yr')
+
+    return mosaic \
+        .addBands(amp_ndvi_3yr) \
+        .addBands(amp_evi2_3yr) \
+        .addBands(std_gcvi_median_3yr) \
+        .addBands(std_nbr_median_3yr) \
+        .addBands(std_ndfi_median_3yr) \
+        .addBands(mean_ndti_median_3yr)
