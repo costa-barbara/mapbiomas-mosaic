@@ -33,7 +33,7 @@ def getMosaic(
 
     Returns:
         ee.Image: Final mosaic containing seasonal medians, percentiles, 
-                  amplitude, standard deviation, and dry/wet NDVI thresholds.
+                  amplitude, median absolute deviation, and dry/wet NDVI thresholds.
     """
 
     # Get original band names
@@ -42,7 +42,16 @@ def getMosaic(
     # Generate suffixes for renamed output bands
     bandsDry = bands.map(lambda band: ee.String(band).cat('_median_dry'))
     bandsWet = bands.map(lambda band: ee.String(band).cat('_median_wet'))
+
+    bandsMin = bands.map(lambda band: ee.String(band).cat('_min'))
+    bandsMax = bands.map(lambda band: ee.String(band).cat('_max'))
     bandsAmp = bands.map(lambda band: ee.String(band).cat('_amp'))
+
+    bandsP25 = bands.map(lambda band: ee.String(band).cat('_p25'))
+    bandsP75 = bands.map(lambda band: ee.String(band).cat('_p75'))
+    bandsIQR = bands.map(lambda band: ee.String(band).cat('_iqr'))
+
+    bandsMad = bands.map(lambda band: ee.String(band).cat('_mad'))
 
     # Compute NDVI percentiles to define dry and wet seasons
     dry = collection.select([percentileBand]).reduce(ee.Reducer.percentile([percentileDry]))
@@ -52,7 +61,7 @@ def getMosaic(
     collectionDry = collection.map(lambda image: image.mask(image.select([percentileBand]).lte(dry)))
     collectionWet = collection.map(lambda image: image.mask(image.select([percentileBand]).gte(wet)))
 
-    # Filter full collection to the date range and compute the median mosaic
+    # Filter entire collection to the date range and compute the median mosaic
     mosaic = collection.filter(ee.Filter.date(dateStart, dateEnd)).reduce(ee.Reducer.median())
 
     # Generate seasonal mosaics using the masked collections
@@ -60,27 +69,33 @@ def getMosaic(
     mosaicWet = collectionWet.reduce(ee.Reducer.median()).rename(bandsWet)
 
     # Compute percentile mosaics for amplitude
-    mosaicMin = collection.reduce(ee.Reducer.percentile([percentileMin]))
-    mosaicMax = collection.reduce(ee.Reducer.percentile([percentileMax]))
+    mosaicMin = collection.reduce(ee.Reducer.percentile([percentileMin])).rename(bandsMin)
+    mosaicMax = collection.reduce(ee.Reducer.percentile([percentileMax])).rename(bandsMax)
 
     # Compute amplitude (max - min)
     mosaicAmp = mosaicMax.subtract(mosaicMin).rename(bandsAmp)
 
-    # Compute standard deviation across time series
-    mosaicStdDev = collection.reduce(ee.Reducer.stdDev())
+    # Interquartile range: p75 - p25
+    mosaicP25 = collection.reduce(ee.Reducer.percentile([25])).rename(bandsP25)
+    mosaicP75 = collection.reduce(ee.Reducer.percentile([75])).rename(bandsP75)
+    mosaicIQR = mosaicP75.subtract(mosaicP25).rename(bandsIQR)
 
-    # Rename min and max bands
-    mosaicMinRenamed = mosaicMin.rename(bands.map(lambda band: ee.String(band).cat('_min')))
-    mosaicMaxRenamed = mosaicMax.rename(bands.map(lambda band: ee.String(band).cat('_max')))   
+    # Median absolute deviation from temporal median
+    median = collection.reduce(ee.Reducer.median()).rename(bands)
+
+    absDeviationCollection = collection.map(lambda image: image.subtract(median).abs())
+
+    mosaicMad = absDeviationCollection.reduce(ee.Reducer.median()).rename(bandsMad)
 
     # Combine all components into final mosaic
     mosaic = mosaic\
         .addBands(mosaicDry)\
         .addBands(mosaicWet)\
-        .addBands(mosaicMinRenamed)\
-        .addBands(mosaicMaxRenamed)\
+        .addBands(mosaicMin)\
+        .addBands(mosaicMax)\
         .addBands(mosaicAmp)\
-        .addBands(mosaicStdDev)\
+        .addBands(mosaicIQR)\
+        .addBands(mosaicMad)\
         .addBands(dry)\
         .addBands(wet)
 
