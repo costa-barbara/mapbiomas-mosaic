@@ -1,7 +1,9 @@
 import ee
 import math
 
+#--------------------------------
 # Terrain covariates
+#--------------------------------
 def getTerrainMetrics(image):
     """
     Added bands:
@@ -46,56 +48,44 @@ def getTerrainMetrics(image):
         .addBands(slope_pct) \
         .addBands(tpi) \
         .addBands(ruggedness)
-
+    
+#--------------------------------
 # Structural-context metrics
+#--------------------------------
 def getStructuralContext(image):
     """
-    Adds local structural-context metrics derived from spectral index bands.
+    Adds reduced local structural-context metrics.
 
-    This function computes neighborhood-level mean and standard deviation for
-    selected spectral indices. These metrics are intended to capture local
-    vegetation structure and spatial heterogeneity, supporting the separation
-    of spectrally similar Cerrado classes such as savanna, grassland, and
-    pasture.
-
-    Parameters:
-        image (ee.Image): Image containing 'index_median'.
-
-    Returns:
-        ee.Image: Input image with additional structural context bands:
-            - index_median_mean
-            - index_median_stdDev
-
+    Added bands:
+        - gcvi_median_mean
+        - gcvi_median_dry_mean
+        - ndfi_median_dry_stdDev
     """
 
-    # Define a local neighborhood window.
-    # This window size is intended to capture local structural context while reducing excessive smoothing across class boundaries.
     kernel = ee.Kernel.square(radius=3)
 
-    # Spectral index bands selected for local structural analysis.
-    structural_bands = [
-        'gcvi_median',
-        'gcvi_median_dry',
-        'ndfi_median_dry',
-    ]
-
-    image_base = image.select(structural_bands)
-
-    # Combined reducer to compute local mean and local standard deviation
-    # in a single neighborhood operation.
-    reducer = ee.Reducer.mean().combine(
-        reducer2=ee.Reducer.stdDev(),
-        sharedInputs=True
-    )
-
-    structural_context = image_base.reduceNeighborhood(
-        reducer=reducer,
+    gcvi_mean = image.select('gcvi_median').reduceNeighborhood(
+        reducer=ee.Reducer.mean(),
         kernel=kernel
-    )
+    ).rename('gcvi_median_mean')
 
-    return image.addBands(structural_context)
+    gcvi_dry_mean = image.select('gcvi_median_dry').reduceNeighborhood(
+        reducer=ee.Reducer.mean(),
+        kernel=kernel
+    ).rename('gcvi_median_dry_mean')
 
+    ndfi_dry_std = image.select('ndfi_median_dry').reduceNeighborhood(
+        reducer=ee.Reducer.stdDev(),
+        kernel=kernel
+    ).rename('ndfi_median_dry_stdDev')
+
+    return image.addBands(gcvi_mean) \
+        .addBands(gcvi_dry_mean) \
+        .addBands(ndfi_dry_std)
+
+#--------------------------------
 # Textural for Rocky Outcrop Map
+#--------------------------------
 def getSpatialContext(image):
     """
     Adds lightweight spatial-context metrics for rocky outcrop mapping.
