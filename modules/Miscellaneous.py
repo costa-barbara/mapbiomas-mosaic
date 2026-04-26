@@ -2,61 +2,6 @@ import ee
 import math
 
 # Terrain covariates
-def getTerrain(image):
-    """
-    Added bands:
-        - elevation: elevation above sea level, in meters.
-        - slope: terrain slope, expressed as percent rise.
-        - tpi: Topographic Position Index, calculated as the difference between
-          the pixel elevation and the mean elevation of its local neighborhood.
-
-    Parameters:
-        image (ee.Image):
-            Input image to which the terrain covariates will be added.
-
-    Returns:
-        ee.Image:
-            Input image with the additional terrain bands:
-            ['elevation', 'slope', 'tpi'].
-    """
-
-    # Load and mosaic FABDEM
-    # The original FABDEM collection is distributed as image tiles.
-    dem = ee.ImageCollection("projects/sat-io/open-datasets/FABDEM") \
-        .mosaic() \
-        .select('b1') \
-        .rename('elevation') \
-        .toFloat()
-
-    # Compute terrain slope in degrees from the elevation model.
-    slope_deg = ee.Terrain.slope(dem)
-
-    # Convert slope from degrees to percent rise:
-    # slope (%) = tan(slope degrees * pi / 180) * 100
-    slope_pct = slope_deg.expression(
-        'tan(deg * pi / 180) * 100',
-        {
-            'deg': slope_deg,
-            'pi': ee.Number(math.pi)
-        }
-    ).rename('slope').toFloat()
-
-    # Compute Topographic Position Index (TPI).
-    # TPI = elevation of the focal pixel - mean elevation of the neighborhood.
-    # Positive values indicate locally higher positions; negative values
-    # indicate locally lower positions.
-    kernel = ee.Kernel.square(radius=5)  # ~330 m
-
-    mean_neighborhood = dem.reduceNeighborhood(
-        reducer=ee.Reducer.mean(),
-        kernel=kernel
-    )
-
-    tpi = dem.subtract(mean_neighborhood).rename('tpi').toFloat()
-
-    return image.addBands(dem).addBands(slope_pct).addBands(tpi)
-
-# Terrain metrics for Rocky Outcrop Map
 def getTerrainMetrics(image):
     """
     Added bands:
@@ -64,7 +9,6 @@ def getTerrainMetrics(image):
         - slope: terrain slope, expressed as percent rise.
         - tpi: Topographic Position Index.
         - ruggedness: local standard deviation of elevation.
-        - tri: Terrain Ruggedness Index, based on local absolute elevation differences.
     """
 
     dem = ee.ImageCollection("projects/sat-io/open-datasets/FABDEM") \
@@ -84,7 +28,7 @@ def getTerrainMetrics(image):
     ).rename('slope').toFloat()
 
     # Kernel for local terrain metrics
-    kernel = ee.Kernel.square(radius=5)  # ~330 m
+    kernel = ee.Kernel.square(radius=3)
 
     mean_neighborhood = dem.reduceNeighborhood(
         reducer=ee.Reducer.mean(),
@@ -98,16 +42,10 @@ def getTerrainMetrics(image):
         kernel=kernel
     ).rename('ruggedness').toFloat()
 
-    tri = dem.subtract(mean_neighborhood) \
-        .abs() \
-        .rename('tri') \
-        .toFloat()
-
     return image \
         .addBands(slope_pct) \
         .addBands(tpi) \
-        .addBands(ruggedness) \
-        .addBands(tri)
+        .addBands(ruggedness)
 
 # Structural-context metrics
 def getStructuralContext(image):
@@ -165,27 +103,33 @@ def getStructuralContext(image):
     return image.addBands(structural_context)
 
 # Textural for Rocky Outcrop Map
-def getGLCMTexture(image, band='swir1_median'):
+def getSpatialContext(image):
     """
-    Adds selected GLCM texture metrics from a mineral-sensitive band.
+    Adds lightweight spatial-context metrics for rocky outcrop mapping.
 
-    The input band is rescaled to byte because ee.Image.glcmTexture()
-    requires integer input. 
+    Metrics:
+        - local mean: neighborhood-level dominance of substrate/vegetation.
+        - local stdDev: local heterogeneity / texture.
     """
 
-    texture_input = image.select(band) \
-        .unitScale(0, 10000) \
-        .multiply(255) \
-        .toByte()
+    kernel = ee.Kernel.square(radius=3)  # 5x5 pixels 
 
-    glcm = texture_input.glcmTexture(size=3)
+    bands_context = [
+        'bsi_median',
+        'ndvi_median',
+        'swir1_median'
+    ]
 
-    selected = glcm.select([
-        f'{band}_contrast',
-        f'{band}_var',
-        f'{band}_idm',
-        f'{band}_asm',
-        f'{band}_corr'
-    ])
+    img_base = image.select(bands_context)
 
-    return image.addBands(selected)
+    reducer = ee.Reducer.mean().combine(
+        reducer2=ee.Reducer.stdDev(),
+        sharedInputs=True
+    )
+
+    context = img_base.reduceNeighborhood(
+        reducer=reducer,
+        kernel=kernel
+    )
+
+    return image.addBands(context)
