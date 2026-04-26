@@ -265,6 +265,42 @@ def getHallHeight(image):
 
     return image.addBands(hallheight, overwrite=True)
 
+# --------------------------------------
+# SPECIFIC INDEXES FOR ROCKY OUTCROP MAP
+# --------------------------------------
+
+def getBSI(image):
+    """
+    Bare Soil Index.
+    Higher values tend to indicate exposed soil / bare substrate.
+    """
+    bsi = image.expression(
+        '((swir1 + red) - (nir + blue)) / ((swir1 + red) + (nir + blue))',
+        {
+            'blue': image.select('blue'),
+            'red': image.select('red'),
+            'nir': image.select('nir'),
+            'swir1': image.select('swir1')
+        }
+    ).rename('bsi').toFloat()
+
+    return image.addBands(bsi)
+
+
+def getNDRI(image):
+    """
+    Normalized Difference Rock Index / bare rock-oriented SWIR-NIR contrast.
+    """
+    ndri = image.expression(
+        '(swir2 - nir) / (swir2 + nir)',
+        {
+            'nir': image.select('nir'),
+            'swir2': image.select('swir2')
+        }
+    ).rename('ndri').toFloat()
+
+    return image.addBands(ndri)
+
 
 # --------------------------------------
 # SPECIFIC INDEXES FOR SENTINEL-2 DATA
