@@ -41,14 +41,6 @@ def addThreeYearMetrics(year, mosaic, mosaic_dict):
 
     ndvi_dry = ee.ImageCollection.fromImages([m.select('ndvi_median_dry').toFloat() for m in mosaics_3yr])
 
-    evi2_wet = ee.ImageCollection.fromImages([m.select('evi2_median_wet').toFloat() for m in mosaics_3yr])
-
-    evi2_dry = ee.ImageCollection.fromImages([m.select('evi2_median_dry').toFloat() for m in mosaics_3yr])
-
-    gcvi_median = ee.ImageCollection.fromImages([m.select('gcvi_median').toFloat() for m in mosaics_3yr])
-
-    nbr_median = ee.ImageCollection.fromImages([m.select('nbr_median').toFloat() for m in mosaics_3yr])
-
     ndfi_median = ee.ImageCollection.fromImages([m.select('ndfi_median').toFloat() for m in mosaics_3yr])
 
     ndti_median = ee.ImageCollection.fromImages([m.select('ndti_median').toFloat() for m in mosaics_3yr])
@@ -60,19 +52,8 @@ def addThreeYearMetrics(year, mosaic, mosaic_dict):
         .subtract(ndvi_dry.min()) \
         .rename('amp_ndvi_3yr')
 
-    amp_evi2_3yr = evi2_wet.max() \
-        .subtract(evi2_dry.min()) \
-        .rename('amp_evi2_3yr')
-
     # Interannual variability of vegetation vigor.
     # Useful for detecting unstable or managed vegetation dynamics.
-    std_gcvi_median_3yr = gcvi_median.reduce(ee.Reducer.stdDev()) \
-        .rename('std_gcvi_median_3yr')
-
-    # Interannual variability of disturbance/moisture-related response.
-    std_nbr_median_3yr = nbr_median.reduce(ee.Reducer.stdDev()) \
-        .rename('std_nbr_median_3yr')
-
     # Interannual variability of vegetation structure/integrity.
     std_ndfi_median_3yr = ndfi_median.reduce(ee.Reducer.stdDev()) \
         .rename('std_ndfi_median_3yr')
@@ -84,93 +65,35 @@ def addThreeYearMetrics(year, mosaic, mosaic_dict):
 
     return mosaic \
         .addBands(amp_ndvi_3yr) \
-        .addBands(amp_evi2_3yr) \
-        .addBands(std_gcvi_median_3yr) \
-        .addBands(std_nbr_median_3yr) \
         .addBands(std_ndfi_median_3yr) \
         .addBands(mean_ndti_median_3yr)
 
+#--------------------------------------
 # Temporal metrics for Rocky Outcrop Map
+#--------------------------------------
+
 def threeYearMetrics(year, mosaic, mosaic_dict):
     """
-    Adds trailing three-year temporal metrics to the current annual mosaic.
+    Reduced temporal metrics for rocky outcrop mapping.
 
-    For rocky outcrop / rupestrian formation mapping, the metrics are designed
-    to capture:
-        - persistence of exposed substrate / rock signal
-        - low interannual variability of mineral-related indices
-        - seasonal contrast between vegetation and exposed substrate
-        - separation from agriculture, pasture and transient bare soil
+    Metrics:
+        - mean_bsi_median_3yr: persistence of exposed substrate
+        - std_ndvi_median_3yr: interannual vegetation variability
     """
 
     years_3yr = [y for y in [year - 2, year - 1, year] if y in mosaic_dict]
     mosaics_3yr = [mosaic_dict[y] for y in years_3yr]
 
-    ndvi_wet = ee.ImageCollection.fromImages([m.select('ndvi_median_wet').toFloat() for m in mosaics_3yr])
-
-    ndvi_dry = ee.ImageCollection.fromImages([m.select('ndvi_median_dry').toFloat() for m in mosaics_3yr])
-
-    evi2_wet = ee.ImageCollection.fromImages([m.select('evi2_median_wet').toFloat() for m in mosaics_3yr])
-
-    evi2_dry = ee.ImageCollection.fromImages([m.select('evi2_median_dry').toFloat() for m in mosaics_3yr])
-
     bsi_median = ee.ImageCollection.fromImages([m.select('bsi_median').toFloat() for m in mosaics_3yr])
 
-    ndri_median = ee.ImageCollection.fromImages([m.select('ndri_median').toFloat() for m in mosaics_3yr])
+    ndvi_median = ee.ImageCollection.fromImages([m.select('ndvi_median').toFloat() for m in mosaics_3yr])
 
-    tgsi_median = ee.ImageCollection.fromImages([m.select('tgsi_median').toFloat() for m in mosaics_3yr])
-
-    msi_median = ee.ImageCollection.fromImages([m.select('msi_median').toFloat() for m in mosaics_3yr])
-
-    nbr_median = ee.ImageCollection.fromImages([m.select('nbr_median').toFloat() for m in mosaics_3yr])
-
-    # Seasonal vegetation amplitude.
-    # Helps separate rocky/rupestrian surfaces from vegetation with strong
-    # wet-dry phenological response.
-    amp_ndvi_3yr = ndvi_wet.max() \
-        .subtract(ndvi_dry.min()) \
-        .rename('amp_ndvi_3yr')
-
-    amp_evi2_3yr = evi2_wet.max() \
-        .subtract(evi2_dry.min()) \
-        .rename('amp_evi2_3yr')
-
-    # Persistence of exposed substrate / mineral signal.
     mean_bsi_median_3yr = bsi_median.reduce(ee.Reducer.mean()) \
         .rename('mean_bsi_median_3yr')
 
-    mean_ndri_median_3yr = ndri_median.reduce(ee.Reducer.mean()) \
-        .rename('mean_ndri_median_3yr')
-
-    mean_tgsi_median_3yr = tgsi_median.reduce(ee.Reducer.mean()) \
-        .rename('mean_tgsi_median_3yr')
-
-    mean_msi_median_3yr = msi_median.reduce(ee.Reducer.mean()) \
-        .rename('mean_msi_median_3yr')
-
-    # Interannual stability.
-    # Rocky areas should usually be more stable than agriculture, pasture,
-    # exposed soil and recently disturbed surfaces.
-    std_bsi_median_3yr = bsi_median.reduce(ee.Reducer.stdDev()) \
-        .rename('std_bsi_median_3yr')
-
-    std_ndri_median_3yr = ndri_median.reduce(ee.Reducer.stdDev()) \
-        .rename('std_ndri_median_3yr')
-
-    std_tgsi_median_3yr = tgsi_median.reduce(ee.Reducer.stdDev()) \
-        .rename('std_tgsi_median_3yr')
-
-    std_nbr_median_3yr = nbr_median.reduce(ee.Reducer.stdDev()) \
-        .rename('std_nbr_median_3yr')
+    std_ndvi_median_3yr = ndvi_median.reduce(ee.Reducer.stdDev()) \
+        .rename('std_ndvi_median_3yr')
 
     return mosaic \
-        .addBands(amp_ndvi_3yr) \
-        .addBands(amp_evi2_3yr) \
         .addBands(mean_bsi_median_3yr) \
-        .addBands(mean_ndri_median_3yr) \
-        .addBands(mean_tgsi_median_3yr) \
-        .addBands(mean_msi_median_3yr) \
-        .addBands(std_bsi_median_3yr) \
-        .addBands(std_ndri_median_3yr) \
-        .addBands(std_tgsi_median_3yr) \
-        .addBands(std_nbr_median_3yr)
+        .addBands(std_ndvi_median_3yr)
