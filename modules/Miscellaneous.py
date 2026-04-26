@@ -69,21 +69,14 @@ def getStructuralContext(image):
     """
 
     # Define a local neighborhood window.
-    #
-    # Kernel radius = 4 pixels.
-    # At 30 m spatial resolution, this corresponds to a 9 x 9 pixel window,
-    # or approximately 270 x 270 m.
-    #
-    # This window size is intended to capture local structural context while
-    # reducing excessive smoothing across class boundaries.
-    kernel = ee.Kernel.square(radius=4)
+    # This window size is intended to capture local structural context while reducing excessive smoothing across class boundaries.
+    kernel = ee.Kernel.square(radius=3)
 
     # Spectral index bands selected for local structural analysis.
     structural_bands = [
         'gcvi_median',
         'gcvi_median_dry',
-        'ndfi_median',
-        'ndfi_median_dry'
+        'ndfi_median_dry',
     ]
 
     image_base = image.select(structural_bands)
