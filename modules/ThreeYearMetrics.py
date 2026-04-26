@@ -86,14 +86,17 @@ def threeYearMetrics(year, mosaic, mosaic_dict):
 
     bsi_median = ee.ImageCollection.fromImages([m.select('bsi_median').toFloat() for m in mosaics_3yr])
 
-    ndvi_median = ee.ImageCollection.fromImages([m.select('ndvi_median').toFloat() for m in mosaics_3yr])
+    ndvi_wet = ee.ImageCollection.fromImages([m.select('ndvi_median_wet').toFloat() for m in mosaics_3yr])
+
+    ndvi_dry = ee.ImageCollection.fromImages([m.select('ndvi_median_dry').toFloat() for m in mosaics_3yr])
 
     mean_bsi_median_3yr = bsi_median.reduce(ee.Reducer.mean()) \
         .rename('mean_bsi_median_3yr')
 
-    std_ndvi_median_3yr = ndvi_median.reduce(ee.Reducer.stdDev()) \
-        .rename('std_ndvi_median_3yr')
+    amp_ndvi_3yr = ndvi_wet.max() \
+        .subtract(ndvi_dry.min()) \
+        .rename('amp_ndvi_3yr')
 
     return mosaic \
         .addBands(mean_bsi_median_3yr) \
-        .addBands(std_ndvi_median_3yr)
+        .addBands(amp_ndvi_3yr)
