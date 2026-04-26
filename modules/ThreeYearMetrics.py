@@ -43,8 +43,6 @@ def addThreeYearMetrics(year, mosaic, mosaic_dict):
 
     ndfi_median = ee.ImageCollection.fromImages([m.select('ndfi_median').toFloat() for m in mosaics_3yr])
 
-    ndti_median = ee.ImageCollection.fromImages([m.select('ndti_median').toFloat() for m in mosaics_3yr])
-
     # Multi-year phenological amplitude.
     # Useful for agriculture and managed pasture, which often show stronger
     # seasonal contrast than native vegetation.
@@ -52,21 +50,13 @@ def addThreeYearMetrics(year, mosaic, mosaic_dict):
         .subtract(ndvi_dry.min()) \
         .rename('amp_ndvi_3yr')
 
-    # Interannual variability of vegetation vigor.
-    # Useful for detecting unstable or managed vegetation dynamics.
     # Interannual variability of vegetation structure/integrity.
     std_ndfi_median_3yr = ndfi_median.reduce(ee.Reducer.stdDev()) \
         .rename('std_ndfi_median_3yr')
 
-    # Mean NDTI across three years.
-    # Useful for persistent agricultural soil/residue/tillage signal.
-    mean_ndti_median_3yr = ndti_median.reduce(ee.Reducer.mean()) \
-        .rename('mean_ndti_median_3yr')
-
     return mosaic \
         .addBands(amp_ndvi_3yr) \
-        .addBands(std_ndfi_median_3yr) \
-        .addBands(mean_ndti_median_3yr)
+        .addBands(std_ndfi_median_3yr) 
 
 #--------------------------------------
 # Temporal metrics for Rocky Outcrop Map
