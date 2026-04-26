@@ -165,7 +165,7 @@ def getStructuralContext(image):
     return image.addBands(structural_context)
 
 # Textural for Rocky Outcrop Map
-def getGLCMTexture(image, band='swir1'):
+def getGLCMTexture(image, band='swir1_median'):
     """
     Adds selected GLCM texture metrics from a mineral-sensitive band.
 
