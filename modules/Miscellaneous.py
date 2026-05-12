@@ -60,31 +60,38 @@ def getStructuralContext(image):
         - gcvi_median_mean
         - gcvi_median_dry_mean
         - ndfi_median_dry_stdDev
-     Notes:
-        The kernel radius is 3 pixels, equivalent to a 7x7 local window
-        at Landsat resolution.
+        - tcb_median_stdDev
     """
 
     kernel = ee.Kernel.square(radius=3)
 
     gcvi_mean = image.select('gcvi_median').reduceNeighborhood(
         reducer=ee.Reducer.mean(),
-        kernel=kernel
+        kernel=kernel,
+        optimization='boxcar'
     ).rename('gcvi_median_mean')
 
     gcvi_dry_mean = image.select('gcvi_median_dry').reduceNeighborhood(
         reducer=ee.Reducer.mean(),
-        kernel=kernel
+        kernel=kernel,
+        optimization='boxcar'
     ).rename('gcvi_median_dry_mean')
 
-    ndfi_wet_std = image.select('ndfi_median_wet').reduceNeighborhood(
+    ndfi_dry_std = image.select('ndfi_median_dry').reduceNeighborhood(
         reducer=ee.Reducer.stdDev(),
         kernel=kernel
-    ).rename('ndfi_median_wet_stdDev')
+    ).rename('ndfi_median_dry_stdDev')
 
-    return image.addBands(gcvi_mean) \
+    tcb_std = image.select('tcb_median').reduceNeighborhood(
+        reducer=ee.Reducer.stdDev(),
+        kernel=kernel
+    ).rename('tcb_median_stdDev')
+
+    return image \
+        .addBands(gcvi_mean) \
         .addBands(gcvi_dry_mean) \
-        .addBands(ndfi_wet_std)
+        .addBands(ndfi_dry_std) \
+        .addBands(tcb_std)
 
 #--------------------------------
 # Textural for Rocky Outcrop Map
