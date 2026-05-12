@@ -60,6 +60,9 @@ def getStructuralContext(image):
         - gcvi_median_mean
         - gcvi_median_dry_mean
         - ndfi_median_dry_stdDev
+     Notes:
+        The kernel radius is 3 pixels, equivalent to a 7x7 local window
+        at Landsat resolution.
     """
 
     kernel = ee.Kernel.square(radius=3)
@@ -74,14 +77,14 @@ def getStructuralContext(image):
         kernel=kernel
     ).rename('gcvi_median_dry_mean')
 
-    ndfi_dry_std = image.select('ndfi_median_dry').reduceNeighborhood(
+    ndfi_wet_std = image.select('ndfi_median_wet').reduceNeighborhood(
         reducer=ee.Reducer.stdDev(),
         kernel=kernel
-    ).rename('ndfi_median_dry_stdDev')
+    ).rename('ndfi_median_wet_stdDev')
 
     return image.addBands(gcvi_mean) \
         .addBands(gcvi_dry_mean) \
-        .addBands(ndfi_dry_std)
+        .addBands(ndfi_wet_std)
 
 #--------------------------------
 # Textural for Rocky Outcrop Map
