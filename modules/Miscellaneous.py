@@ -48,6 +48,24 @@ def getTerrainMetrics(image):
         .addBands(slope_pct) \
         .addBands(tpi) \
         .addBands(ruggedness)
+
+def getSlope(image):
+    """
+    Adds a slope band (percent) to the input image, derived from the MERIT DEM.
+    """
+    
+    # Load MERIT DEM and compute slope in degrees
+    terrain = ee.Image("MERIT/DEM/v1_0_3").select('dem')
+    slope_deg = ee.Terrain.slope(terrain)
+    
+    # Convert slope from degrees to percent: tan(deg * pi / 180) * 100
+    slope_pct = slope_deg.expression(
+      'tan (pi/180 * deg) * 100', {
+        'deg': slope_deg,
+        'pi': ee.Number(math.pi)
+      }).rename('slope').toInt16()
+
+    return image.addBands(slope_pct)
     
 #--------------------------------
 # Structural-context metrics
