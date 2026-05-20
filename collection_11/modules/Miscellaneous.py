@@ -1,57 +1,19 @@
 import ee
 import math
 
-#--------------------------------
-# Terrain covariates
-#--------------------------------
-def getTerrainMetrics(image):
-    """
-    Added bands:
-        - elevation: elevation above sea level, in meters.
-        - slope: terrain slope, expressed as percent rise.
-        - tpi: Topographic Position Index.
-        - ruggedness: local standard deviation of elevation.
-    """
-
-    dem = ee.ImageCollection("projects/sat-io/open-datasets/FABDEM") \
-        .mosaic() \
-        .select('b1') \
-        .rename('elevation') \
-        .toFloat()
-
-    slope_deg = ee.Terrain.slope(dem)
-
-    slope_pct = slope_deg.expression(
-        'tan(deg * pi / 180) * 100',
-        {
-            'deg': slope_deg,
-            'pi': ee.Number(math.pi)
-        }
-    ).rename('slope').toFloat()
-
-    # Kernel for local terrain metrics
-    kernel = ee.Kernel.square(radius=3)
-
-    mean_neighborhood = dem.reduceNeighborhood(
-        reducer=ee.Reducer.mean(),
-        kernel=kernel
-    )
-
-    tpi = dem.subtract(mean_neighborhood).rename('tpi').toFloat()
-
-    ruggedness = dem.reduceNeighborhood(
-        reducer=ee.Reducer.stdDev(),
-        kernel=kernel
-    ).rename('ruggedness').toFloat()
-
-    return image \
-        .addBands(slope_pct) \
-        .addBands(tpi) \
-        .addBands(ruggedness)
+#--------------------------------------------------------------------------------------------------
+# Calculates terrain slope (in %) from the MERIT DEM and adds it as a new band to the input image
+#--------------------------------------------------------------------------------------------------
 
 def getSlope(image):
     """
     Adds a slope band (percent) to the input image, derived from the MERIT DEM.
+    
+    Parameters:
+        image (ee.Image): The image to which the slope band will be added.
+        
+    Returns:
+        ee.Image: Input image with an additional 'slope' band in percent.
     """
     
     # Load MERIT DEM and compute slope in degrees
@@ -65,82 +27,33 @@ def getSlope(image):
         'pi': ee.Number(math.pi)
       }).rename('slope').toInt16()
 
-    return image.addBands(slope_pct)
+    return image.addBands(slope)
     
-#--------------------------------
-# Structural-context metrics
-#--------------------------------
-def getStructuralContext(image):
+#-----------------------------------------------------------------------------------------------------
+# Computes entropy texture on the green band to assess spatial variation in vegetation or brightness
+#-----------------------------------------------------------------------------------------------------
+
+def getEntropyG(image):
     """
-    Adds reduced local structural-context metrics.
+    Computes entropy texture on the green band using a 5-pixel square kernel.
+    Intended for use with Landsat monthly mosaics that include 'green_median'.
 
-    Added bands:
-        - gcvi_median_mean
-        - gcvi_median_dry_mean
-        - ndfi_median_dry_stdDev
-        - tcb_median_stdDev
-    """
+    Parameters:
+        image (ee.Image): Image containing the 'green_median' band.
 
-    kernel = ee.Kernel.square(radius=3)
-
-    gcvi_mean = image.select('gcvi_median').reduceNeighborhood(
-        reducer=ee.Reducer.mean(),
-        kernel=kernel,
-        optimization='boxcar'
-    ).rename('gcvi_median_mean')
-
-    gcvi_dry_mean = image.select('gcvi_median_dry').reduceNeighborhood(
-        reducer=ee.Reducer.mean(),
-        kernel=kernel,
-        optimization='boxcar'
-    ).rename('gcvi_median_dry_mean')
-
-    ndfi_dry_std = image.select('ndfi_median_dry').reduceNeighborhood(
-        reducer=ee.Reducer.stdDev(),
-        kernel=kernel
-    ).rename('ndfi_median_dry_stdDev')
-
-    tcb_std = image.select('tcb_median').reduceNeighborhood(
-        reducer=ee.Reducer.stdDev(),
-        kernel=kernel
-    ).rename('tcb_median_stdDev')
-
-    return image \
-        .addBands(gcvi_mean) \
-        .addBands(gcvi_dry_mean) \
-        .addBands(ndfi_dry_std) \
-        .addBands(tcb_std)
-
-#--------------------------------
-# Textural for Rocky Outcrop Map
-#--------------------------------
-def getSpatialContext(image):
-    """
-    Adds lightweight spatial-context metrics for rocky outcrop mapping.
-
-    Metrics:
-        - local mean: neighborhood-level dominance of substrate/vegetation.
-        - local stdDev: local heterogeneity / texture.
+    Returns:
+        ee.Image:  image with textG band
+        ee.Image: Input image with an additional 'green_median_texture' band (0–100).
     """
 
-    kernel = ee.Kernel.square(radius=3)  # 5x5 pixels 
+    square = ee.Kernel.square(radius=5)
 
-    bands_context = [
-        'bsi_median',
-        'ndvi_median',
-        'swir1_median'
-    ]
+    entropyG = image.select('green_median')\
+        .int32()\
+        .entropy(square)\
+        .multiply(100)\
+        .rename("green_median_texture")
 
-    img_base = image.select(bands_context)
-
-    reducer = ee.Reducer.mean().combine(
-        reducer2=ee.Reducer.stdDev(),
-        sharedInputs=True
-    )
-
-    context = img_base.reduceNeighborhood(
-        reducer=reducer,
-        kernel=kernel
-    )
-
-    return image.addBands(context)
+    return image.addBands(entropyG)
+    
+    square = ee.Kernel.square(radius=5)
