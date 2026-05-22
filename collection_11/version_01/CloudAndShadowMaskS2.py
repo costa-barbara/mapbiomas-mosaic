@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-# Import earthengine API
+# Import Earth Engine API
 import ee
 import math
 
-from modules.CloudAndShadowMask import cloudFlagMask
+from CloudAndShadowMask import cloudFlagMask
 ee.Initialize()
 
 
