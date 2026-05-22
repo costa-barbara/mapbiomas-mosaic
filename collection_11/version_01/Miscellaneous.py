@@ -27,7 +27,7 @@ def getSlope(image):
         'pi': ee.Number(math.pi)
       }).rename('slope').toInt16()
 
-    return image.addBands(slope)
+    return image.addBands(slope_pct)
     
 #-----------------------------------------------------------------------------------------------------
 # Computes entropy texture on the green band to assess spatial variation in vegetation or brightness
