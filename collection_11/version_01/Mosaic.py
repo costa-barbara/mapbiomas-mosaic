@@ -1,6 +1,6 @@
 #
 import ee
-from modules.BandNames import getBandNames
+from BandNames import getBandNames
 from pprint import pprint
 
 ee.Initialize(project= "ee-barbaracostaipam")
