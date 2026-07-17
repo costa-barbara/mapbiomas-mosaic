@@ -4,7 +4,7 @@ from modules.BandNames import getBandNames
 from pprint import pprint
 
 # Initialize Earth Engine with specific project (adjust to your environment)
-ee.Initialize(project= "ee-barbaracostaipam")
+ee.Initialize(project= "ee-ipam")
 
 # Builds a comprehensive mosaic from a monthly Landsat ImageCollection, 
 # including seasonal medians, amplitude, percentiles, and standard deviation.
