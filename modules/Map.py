@@ -2,7 +2,7 @@
 
 import ee, folium
 
-ee.Initialize(project= "ee-barbaracostaipam")
+ee.Initialize(project= "ee-ipam")
 # class Map():
 
 def addLayer(eeObject, visParams={}, name='layer'):
